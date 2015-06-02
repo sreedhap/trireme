@@ -15,33 +15,34 @@ def upload_file(local_path, remote_path):
     return response
 
 
-def find_cores():
-    cores = []
-    cores_path = 'db/solr'
+def find_tables():
+    tables = []
+    tables_path = 'db/solr'
 
-    potential_cores = os.listdir(cores_path)
-    for potential_core in potential_cores:
+    potential_tables = os.listdir(tables_path)
+    for potential_table in potential_tables:
         # Ignore any non-directory files in here
-        if os.path.isdir("{}/{}".format(cores_path, potential_core)):
-            cores.append(keyspace + "." + potential_core)
-    return cores
+        if os.path.isdir("{}/{}".format(tables_path, potential_table)):
+            tables.append(potential_table)
+    return tables
 
 
-@task(help={'core': 'Name of the core to run against. Omitting this value will create all cores'})
-def create(core=None):
-    cores = []
-    if core:
-        cores.append(core)
+@task(help={'table': 'Name of the table to use to create the core. Omitting this value will create cores for all tables'})
+def create(table=None):
+    tables = []
+    if table:
+        tables.append(table)
     else:
-        cores = find_cores()
+        tables = find_tables()
 
-    for core in cores:
+    for table in tables:
+        core = "{0}.{1}" % (keyspace, table)
         print("Creating Core {}".format(core))
 
-        core_files = os.listdir("db/solr/{}".format(core))
+        core_files = os.listdir("db/solr/{}".format(table))
         for core_file in core_files:
-            print("Uploading {}".format(core_file))
-            response = upload_file("db/solr/{}/{}".format(core, core_file), "{}/resource/{}/{}".format(solr_url, core,
+            print("Uploading {} to {}".format(core_file, core))
+            response = upload_file("db/solr/{}/{}".format(table, core_file), "{}/resource/{}/{}".format(solr_url, core,
                                                                                                        core_file))
             if response.status_code == 200:
                 print('SUCCESS')
@@ -53,21 +54,22 @@ def create(core=None):
             print('Core created, you may view the status in the web interface')
 
 
-@task(help={'core': 'Name of the core to run against. Omitting this value will create all cores'})
-def migrate(core=None):
-    cores = []
-    if core:
-        cores.append(core)
+@task(help={'table': 'Name of the table to use to create the core. Omitting this value will create cores for all tables'})
+def migrate(table=None):
+    tables = []
+    if table:
+        tables.append(table)
     else:
-        cores = find_cores()
+        tables = find_tables()
 
-    for core in cores:
+    for table in tables:
+        core = "{0}.{1}" % (keyspace, table)
         print("Updating Core {}".format(core))
 
-        core_files = os.listdir("db/solr/{}".format(core))
+        core_files = os.listdir("db/solr/{}".format(table))
         for core_file in core_files:
-            print("Uploading {}".format(core_file))
-            response = upload_file("db/solr/{}/{}".format(core, core_file), "{}/resource/{}/{}".format(solr_url, core,
+            print("Uploading {} to {}".format(core_file, core))
+            response = upload_file("db/solr/{}/{}".format(table, core_file), "{}/resource/{}/{}".format(solr_url, core,
                                                                                                        core_file))
             if response.status_code == 200:
                 print('SUCCESS')
@@ -80,8 +82,8 @@ def migrate(core=None):
             print('Successfully reloaded Solr core')
 
 
-@task(help={'name': 'Name of the core you want to create'})
-def add_core(name):
+@task(help={'name': 'Name of the table you want to create core for'})
+def add_table(name):
     if name:
         path = "db/solr/{}".format(name)
         if os.path.exists(path):
@@ -98,5 +100,4 @@ def add_core(name):
             fd = open("{}/schema.xml".format(path), 'w')
             fd.close()
     else:
-        print('Call add_core with the --name parameter specifying a name core. Ex: foo.bar - where foo is your keyspace'
-              'and bar the table name')
+        print('Call add_table with the --name parameter specifying a name. Ex: bar - where bar is the table name specified for the keyspace in config.py')
