@@ -4,7 +4,7 @@ import os
 from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
 import datetime
-from config import contact_points, keyspace, migration_master, username, password
+from config import contact_points, keyspace, migration_master, username, password, replication
 
 contact_point = contact_points[0]
 cluster = None
@@ -58,12 +58,8 @@ def create():
 
         # Create the keyspace, we use simple defaults (SimpleStrategy, RF: 2)
         print("Creating keyspace {}".format(keyspace))
-        session.execute("CREATE KEYSPACE IF NOT EXISTS {} "
-                        "WITH REPLICATION = {{"
-                        "'class': 'NetworkTopologyStrategy', "
-                        "'Solr': 1, "
-                        "'Cassandra': 1, "
-                        "'Analytics': 1}}".format(keyspace))
+        session.execute("CREATE KEYSPACE IF NOT EXISTS {0} "
+                        "WITH REPLICATION = {1}".format(keyspace, replication))
 
         # Add the migrations table transparently, this will track which migrations have been run
         session.execute("CREATE TABLE IF NOT EXISTS {}.migrations ("
