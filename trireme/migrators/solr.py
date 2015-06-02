@@ -27,6 +27,11 @@ def find_tables():
     return tables
 
 
+def _core_name(table):
+    core = "%s.%s" % (keyspace, table)
+    return core
+
+
 @task(help={'table': 'Name of the table to use to create the core. Omitting this value will create cores for all tables'})
 def create(table=None):
     tables = []
@@ -36,7 +41,7 @@ def create(table=None):
         tables = find_tables()
 
     for table in tables:
-        core = "{0}.{1}" % (keyspace, table)
+        core = _core_name(table)
         print("Creating Core {}".format(core))
 
         core_files = os.listdir("db/solr/{}".format(table))
@@ -63,7 +68,7 @@ def migrate(table=None):
         tables = find_tables()
 
     for table in tables:
-        core = "{0}.{1}" % (keyspace, table)
+        core = _core_name(table)
         print("Updating Core {}".format(core))
 
         core_files = os.listdir("db/solr/{}".format(table))
