@@ -3,7 +3,7 @@ from invoke import task
 from requests.auth import HTTPBasicAuth
 import requests
 import os
-from config import solr_url, username, password
+from config import solr_url, username, password, keyspace
 
 auth = HTTPBasicAuth(username, password)
 
@@ -23,7 +23,7 @@ def find_cores():
     for potential_core in potential_cores:
         # Ignore any non-directory files in here
         if os.path.isdir("{}/{}".format(cores_path, potential_core)):
-            cores.append(potential_core)
+            cores.append(keyspace + "." + potential_core)
     return cores
 
 
